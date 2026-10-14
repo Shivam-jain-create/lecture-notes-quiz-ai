@@ -32,24 +32,32 @@ FINAL_PROMPT = ChatPromptTemplate.from_messages([
 ])
 
 
+RETRY_HINTS = ("429", "resource_exhausted", "quota", "503", "unavailable",
+               "overloaded", "timeout", "timed out", "deadline")
+
+
 def get_llm(temperature: float = 0.3):
+    model = os.getenv("LLM_MODEL")
+    if not model:
+        raise ValueError("LLM_MODEL is not set. Add it to .env (local) or Streamlit Secrets (cloud).")
     return ChatGoogleGenerativeAI(
-        model=os.getenv("LLM_MODEL", "gemini-2.5-flash"),
+        model=model,
         google_api_key=os.getenv("GOOGLE_API_KEY"),
         temperature=temperature,
     )
 
 
 def _call_with_retry(chain, inputs: dict, retries: int = 3):
-    """Free-tier APIs fail sometimes (rate limits). Wait and try again."""
+    """Retry only temporary errors (rate limit, overload). Wrong key/model fails immediately."""
     for attempt in range(retries):
         try:
             return chain.invoke(inputs)
         except Exception as e:
-            if attempt == retries - 1:
+            temporary = any(h in f"{type(e).__name__} {e}".lower() for h in RETRY_HINTS)
+            if not temporary or attempt == retries - 1:
                 raise
             wait = 10 * (attempt + 1)
-            print(f"  API error ({type(e).__name__}), retrying in {wait}s...")
+            print(f"  Temporary API error, retrying in {wait}s...")
             time.sleep(wait)
 
 
