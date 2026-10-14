@@ -1,5 +1,7 @@
 # 📚 Lecture Notes Summarizer + Quiz Generator
 
+**Live demo:** https://lecture-notes-quiz-ai.streamlit.app
+
 An AI web app that turns a lecture PDF or YouTube video into study notes and a practice MCQ quiz.
 
 ## Features
@@ -22,7 +24,7 @@ pip install -r requirements.txt
 copy .env.example .env
 streamlit run app.py
 ```
-Open `.env` and add your own Google AI Studio API key.
+Set `LLM_MODEL` in `.env` to a Gemini model your API key can access (the demo uses `gemini-3.5-flash-lite`).
 
 ## Project structure
 - `app.py` - Streamlit interface
@@ -37,3 +39,4 @@ Open `.env` and add your own Google AI Studio API key.
 - The quiz is generated from the summary, so summary errors can carry over
 - Auto-generated YouTube captions can be inaccurate
 - Scanned (image-only) PDFs are not supported
+- Model availability depends on your API key: older models can be retired for new keys, so set `LLM_MODEL` accordingly
